@@ -1,0 +1,10 @@
+com\resume\service\GeminiService.class
+com\resume\dto\AnalysisResult.class
+com\resume\service\PdfService.class
+com\resume\dto\HistoryView.class
+com\resume\repo\AnalysisRepo.class
+com\resume\ResumeApplication.class
+com\resume\controller\ResumeController.class
+com\resume\dto\BulletPair.class
+com\resume\entity\ResumeAnalysis.class
+com\resume\service\ResumeService.class

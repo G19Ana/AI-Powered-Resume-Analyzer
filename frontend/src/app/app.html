@@ -1,0 +1,119 @@
+<div class="dash">
+  <header class="header">
+    <div class="brand">
+      <div class="icon">??</div>
+      <div>
+        <h1>AI-Powered Resume Analyser</h1>
+        <p class="sub">Instant match scoring, keyword gap detection and bullet point rewriting powered by Gemini</p>
+      </div>
+    </div>
+    <div class="key-box">
+      <input type="password" [ngModel]="apiKey()" (ngModelChange)="saveKey($event)" placeholder="Gemini API Key (free)" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="form-pane">
+      <section class="box">
+        <h2>1. Upload Candidate Resume</h2>
+        <div class="dropzone">
+          <input type="file" (change)="onFileChange($event)" accept=".pdf" id="pdfInput" style="display: none;" />
+          <label for="pdfInput" class="upload-btn">
+            {{ fileName() || 'Click to select Resume (PDF)' }}
+          </label>
+        </div>
+
+        <h2 style="margin-top: 18px;">2. Job Information</h2>
+        <input [(ngModel)]="jobTitle" placeholder="Target Job Title" style="width: 100%; margin-bottom: 10px;" />
+        <textarea [(ngModel)]="jobDescription" rows="7" placeholder="Paste full job description requirements here..."></textarea>
+
+        <button class="btn-primary" [disabled]="loading() || !selectedFile" (click)="analyze()">
+          {{ loading() ? 'Analyzing with Gemini...' : 'Analyze Resume' }}
+        </button>
+      </section>
+
+      <section class="box history-box" *ngIf="history().length > 0">
+        <h2>Past Analyses</h2>
+        <div class="history-list">
+          <div class="history-card" *ngFor="let h of history()" (click)="loadHistorical(h.id)">
+            <div>
+              <strong>{{ h.candidateName || 'Candidate' }}</strong>
+              <small>{{ h.jobTitle }} � {{ h.createdAt | date:'shortDate' }}</small>
+            </div>
+            <div class="history-right">
+              <span class="badge" [class.badge-green]="h.matchScore >= 75" [class.badge-yellow]="h.matchScore < 75 && h.matchScore >= 50" [class.badge-red]="h.matchScore < 50">
+                {{ h.matchScore }}%
+              </span>
+              <button class="btn-del" (click)="deleteHistory(h.id, $event)">&times;</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="results-pane">
+      <div *ngIf="!result() && !loading()" class="empty-state">
+        <p>Select a PDF resume, provide the job description, and click <strong>Analyze Resume</strong> to inspect scoring and bullet rewrites.</p>
+      </div>
+
+      <div *ngIf="loading()" class="empty-state">
+        <div class="spinner"></div>
+        <p>Extracting PDF text and generating Gemini analysis...</p>
+      </div>
+
+      <div *ngIf="result() as r" class="results-container">
+        <div class="score-card">
+          <div class="score-dial">
+            <span class="score-num">{{ r.matchScore }}%</span>
+            <span class="score-lbl">Match Score</span>
+          </div>
+          <div class="score-summary">
+            <h3>{{ r.candidateName }}</h3>
+            <p *ngIf="r.matchScore >= 75" class="green-text">Strong match for this position. Candidate aligns with majority of required competencies.</p>
+            <p *ngIf="r.matchScore < 75 && r.matchScore >= 50" class="yellow-text">Moderate match. Essential core skills are present, but key technical gaps exist.</p>
+            <p *ngIf="r.matchScore < 50" class="red-text">Low match. Resume lacks critical qualifications mentioned in the job description.</p>
+          </div>
+        </div>
+
+        <section class="box" *ngIf="r.keywordGaps?.length > 0">
+          <h2>Keyword Gaps Missing from Resume</h2>
+          <div class="tags-row">
+            <span class="tag tag-gap" *ngFor="let k of r.keywordGaps">{{ k }}</span>
+          </div>
+        </section>
+
+        <div class="two-col">
+          <section class="box">
+            <h2>Candidate Strengths</h2>
+            <ul class="clean-list">
+              <li *ngFor="let s of r.strengths">{{ s }}</li>
+            </ul>
+          </section>
+
+          <section class="box">
+            <h2>Recommended Improvements</h2>
+            <ul class="clean-list">
+              <li *ngFor="let i of r.improvements">{{ i }}</li>
+            </ul>
+          </section>
+        </div>
+
+        <section class="box" *ngIf="r.rewrittenBullets?.length > 0">
+          <h2>Side-by-Side: Original vs Rewritten Bullets</h2>
+          <div class="bullet-grid">
+            <div class="bullet-row" *ngFor="let b of r.rewrittenBullets">
+              <div class="bullet-side bullet-orig">
+                <span class="bullet-tag">Original</span>
+                <p>{{ b.original }}</p>
+              </div>
+              <div class="bullet-side bullet-new">
+                <span class="bullet-tag bullet-tag-green">Gemini Optimized</span>
+                <p>{{ b.improved }}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
